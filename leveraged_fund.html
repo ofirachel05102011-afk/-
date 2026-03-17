@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>המחשת קרן נאמנות ממונפת ×3</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.12.7/Recharts.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0f172a; font-family: 'Segoe UI', Arial, sans-serif; }
+    input[type=range] { cursor: pointer; }
+    ::-webkit-scrollbar { height: 6px; width: 6px; }
+    ::-webkit-scrollbar-track { background: #1e293b; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const {
+      LineChart, Line, XAxis, YAxis, CartesianGrid,
+      Tooltip, Legend, ResponsiveContainer, ReferenceLine
+    } = Recharts;
+    const { useState, useMemo } = React;
+
+    const LEVERAGE = 3;
+    const INDEX_START = 100;
+    const FUND_START = 1000;
+    const PERIODS = 20;
+
+    function generateData(type, pct) {
+      const r = pct / 100;
+      let data = [];
+      let indexPrice = INDEX_START;
+      let fundPrice = FUND_START;
+      data.push({ period: 0, indexReturn: 0, fundReturn: 0, indexPrice: INDEX_START, fundPrice: FUND_START, cumIndex: 0, cumFund: 0 });
+      for (let i = 0; i < PERIODS; i++) {
+        const indexR = type === "bull" ? r : type === "bear" ? -r : (i % 2 === 0 ? r : -r);
+        const fundR = indexR * LEVERAGE;
+        indexPrice = indexPrice * (1 + indexR);
+        fundPrice = fundPrice * (1 + fundR);
+        data.push({
+          period: i + 1,
+          indexReturn: +(indexR * 100).toFixed(2),
+          fundReturn: +(fundR * 100).toFixed(2),
+          indexPrice: +indexPrice.toFixed(3),
+          fundPrice: +fundPrice.toFixed(3),
+          cumIndex: +(((indexPrice / INDEX_START) - 1) * 100).toFixed(2),
+          cumFund: +(((fundPrice / FUND_START) - 1) * 100).toFixed(2),
+        });
+      }
+      return data;
+    }
+
+    const DARK = "#0f172a";
+    const CARD = "#1e293b";
+    const BORDER = "#334155";
+    const TEXT = "#e2e8f0";
+    const MUTED = "#94a3b8";
+    const BLUE = "#60a5fa";
+    const PURPLE = "#c084fc";
+    const GREEN = "#4ade80";
+    const RED = "#f87171";
+    const AMBER = "#fbbf24";
+
+    const fmt = (n) => parseFloat(n).toLocaleString("he-IL", { maximumFractionDigits: 2 });
+    const pct = (n) => `${n >= 0 ? "+" : ""}${n}%`;
+    const col = (n) => n >= 0 ? GREEN : RED;
+
+    const CustomTooltip = ({ active, payload, label }) => {
+      if (!active || !payload?.length) return null;
+      return (
+        <div style={{ background: "#0d1526", border: `1px solid ${BORDER}`, borderRadius: 8, padding: "10px 14px", direction: "rtl", fontSize: 13 }}>
+          <p style={{ color: BLUE, fontWeight: "bold", marginBottom: 6 }}>יחידת זמן {label}</p>
+          {payload.map(p => (
+            <p key={p.dataKey} style={{ color: p.color, margin: "2px 0" }}>
+              {p.name}: <strong>{typeof p.value === "number" && p.name.includes("%") ? pct(p.value) : fmt(p.value)}</strong>
+            </p>
+          ))}
+        </div>
+      );
+    };
+
+    const scenarios = {
+      bull:     { label: "📈 שוק עולה",    color: GREEN,  desc: (p) => `עלייה של ${p}% בכל יחידת זמן` },
+      bear:     { label: "📉 שוק יורד",    color: RED,    desc: (p) => `ירידה של ${p}% בכל יחידת זמן` },
+      volatile: { label: "📊 שוק תנודתי", color: AMBER,  desc: (p) => `סירוגין: +${p}% ואז -${p}% — המדד מגיע בסוף לאותו מחיר, הקרן נשחקת` },
+    };
+
+    function App() {
+      const [scenario, setScenario] = useState("bull");
+      const [pctVal, setPctVal] = useState(5);
+      const [activeChart, setActiveChart] = useState("price");
+
+      const data = useMemo(() => generateData(scenario, pctVal), [scenario, pctVal]);
+      const last = data[data.length - 1];
+      const scen = scenarios[scenario];
+
+      const erosion = scenario === "volatile" ? +(last.cumFund - last.cumIndex).toFixed(2) : null;
+      const singleCycleIndex = +(((1 + pctVal/100) * (1 - pctVal/100) - 1) * 100).toFixed(4);
+      const singleCycleFund  = +(((1 + (pctVal*3)/100) * (1 - (pctVal*3)/100) - 1) * 100).toFixed(4);
+
+      return (
+        <div dir="rtl" style={{ fontFamily: "'Segoe UI', Arial, sans-serif", padding: "24px 16px", maxWidth: 900, margin: "0 auto", background: DARK, color: TEXT, minHeight: "100vh" }}>
+
+          <div style={{ textAlign: "center", marginBottom: 28 }}>
+            <h1 style={{ color: BLUE, fontSize: 26, fontWeight: 800, margin: 0 }}>המחשת קרן נאמנות ממונפת ×3</h1>
+            <p style={{ color: MUTED, marginTop: 6, fontSize: 14 }}>
+              מחיר התחלתי: מדד = <strong style={{ color: BLUE }}>100</strong> &nbsp;|&nbsp; קרן = <strong style={{ color: PURPLE }}>1,000</strong>
+            </p>
+          </div>
+
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center", marginBottom: 20 }}>
+            {Object.entries(scenarios).map(([key, s]) => (
+              <button key={key} onClick={() => setScenario(key)} style={{
+                padding: "10px 20px", borderRadius: 8,
+                border: `2px solid ${scenario === key ? s.color : BORDER}`,
+                background: scenario === key ? `${s.color}18` : CARD,
+                color: scenario === key ? s.color : MUTED,
+                cursor: "pointer", fontSize: 14,
+                fontWeight: scenario === key ? 700 : 400,
+                transition: "all 0.15s",
+              }}>
+                {s.label}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ background: CARD, borderRadius: 10, padding: "14px 20px", marginBottom: 20, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+            <span style={{ color: MUTED, fontSize: 14, minWidth: 140 }}>שינוי מדד בכל תקופה:</span>
+            <input type="range" min={1} max={15} value={pctVal} onChange={e => setPctVal(+e.target.value)}
+              style={{ flex: 1, minWidth: 160, accentColor: scen.color }} />
+            <span style={{ color: scen.color, fontWeight: 700, fontSize: 20, minWidth: 60 }}>{pctVal}%</span>
+            <span style={{ color: MUTED, fontSize: 13 }}>| קרן ×3: <strong style={{ color: PURPLE }}>{pctVal * 3}%</strong></span>
+          </div>
+
+          <div style={{ textAlign: "center", background: `${scen.color}15`, border: `1px solid ${scen.color}44`, borderRadius: 8, padding: "10px 16px", marginBottom: 24, color: scen.color, fontSize: 14 }}>
+            {scen.desc(pctVal)}
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+            {[
+              { label: "מחיר מדד סופי", value: fmt(last.indexPrice), change: last.cumIndex, color: BLUE, sub: "התחלה: 100" },
+              { label: "מחיר קרן סופי ×3", value: fmt(last.fundPrice), change: last.cumFund, color: PURPLE, sub: "התחלה: 1,000" },
+            ].map(c => (
+              <div key={c.label} style={{ background: CARD, borderRadius: 12, padding: "16px 20px", border: `1px solid ${BORDER}` }}>
+                <div style={{ color: MUTED, fontSize: 12, marginBottom: 4 }}>{c.label}</div>
+                <div style={{ color: c.color, fontSize: 30, fontWeight: 800 }}>{c.value}</div>
+                <div style={{ color: col(c.change), fontSize: 15, fontWeight: 600, marginTop: 2 }}>{pct(c.change)}</div>
+                <div style={{ color: "#475569", fontSize: 12, marginTop: 2 }}>{c.sub}</div>
+              </div>
+            ))}
+          </div>
+
+          {scenario === "volatile" && (
+            <div style={{ background: "#451a0322", border: `1px solid #92400e`, borderRadius: 12, padding: "14px 18px", marginBottom: 24 }}>
+              <p style={{ color: AMBER, fontWeight: 700, fontSize: 15, margin: "0 0 8px 0" }}>⚠️ שחיקת תנודתיות (Volatility Decay / Beta Slippage)</p>
+              <p style={{ color: "#fcd34d", fontSize: 13, margin: "4px 0" }}>
+                מחזור אחד (+{pctVal}% ואז -{pctVal}%) על המדד:{" "}
+                <strong style={{ color: singleCycleIndex < 0 ? RED : GREEN }}>{pct(singleCycleIndex)}</strong>
+              </p>
+              <p style={{ color: "#fcd34d", fontSize: 13, margin: "4px 0" }}>
+                מחזור אחד (+{pctVal*3}% ואז -{pctVal*3}%) על הקרן:{" "}
+                <strong style={{ color: singleCycleFund < 0 ? RED : GREEN }}>{pct(singleCycleFund)}</strong>
+              </p>
+              <p style={{ color: "#fcd34d", fontSize: 13, margin: "8px 0 0 0" }}>
+                לאחר {PERIODS} תקופות — המדד: <strong style={{ color: col(last.cumIndex) }}>{pct(last.cumIndex)}</strong>{" "}
+                | הקרן: <strong style={{ color: col(last.cumFund) }}>{pct(last.cumFund)}</strong>{" "}
+                | שחיקה נוספת: <strong style={{ color: RED }}>{erosion}%</strong>
+              </p>
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: 8, marginBottom: 0 }}>
+            {[["price", "מחירים"], ["cumReturn", "תשואה מצטברת %"], ["perReturn", "תשואה בכל תקופה %"]].map(([k, label]) => (
+              <button key={k} onClick={() => setActiveChart(k)} style={{
+                padding: "8px 16px", borderRadius: "8px 8px 0 0",
+                border: `1px solid ${BORDER}`, borderBottom: activeChart === k ? "none" : `1px solid ${BORDER}`,
+                background: activeChart === k ? CARD : DARK,
+                color: activeChart === k ? TEXT : MUTED,
+                cursor: "pointer", fontSize: 13,
+              }}>
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ background: CARD, borderRadius: "0 8px 8px 8px", padding: 20, marginBottom: 24, border: `1px solid ${BORDER}` }}>
+            {activeChart === "price" && (
+              <>
+                <p style={{ color: MUTED, fontSize: 13, textAlign: "center", margin: "0 0 12px 0" }}>מחיר מדד (כחול) מול מחיר קרן ×3 (סגול)</p>
+                <ResponsiveContainer width="100%" height={320}>
+                  <LineChart data={data}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={BORDER} />
+                    <XAxis dataKey="period" stroke="#475569" tick={{ fill: MUTED, fontSize: 12 }} />
+                    <YAxis stroke="#475569" tick={{ fill: MUTED, fontSize: 12 }} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend wrapperStyle={{ color: MUTED, fontSize: 13 }} />
+                    <ReferenceLine y={INDEX_START} stroke="#334155" strokeDasharray="4 4" />
+                    <Line type="monotone" dataKey="indexPrice" name="מדד (מחיר)" stroke={BLUE} strokeWidth={2.5} dot={false} />
+                    <Line type="monotone" dataKey="fundPrice" name="קרן ×3 (מחיר)" stroke={PURPLE} strokeWidth={2.5} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </>
+            )}
+            {activeChart === "cumReturn" && (
+              <>
+                <p style={{ color: MUTED, fontSize: 13, textAlign: "center", margin: "0 0 12px 0" }}>תשואה מצטברת מנקודת הפתיחה</p>
+                <ResponsiveContainer width="100%" height={320}>
+                  <LineChart data={data}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={BORDER} />
+                    <XAxis dataKey="period" stroke="#475569" tick={{ fill: MUTED, fontSize: 12 }} />
+                    <YAxis stroke="#475569" tick={{ fill: MUTED, fontSize: 12 }} tickFormatter={v => `${v}%`} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend wrapperStyle={{ color: MUTED, fontSize: 13 }} />
+                    <ReferenceLine y={0} stroke="#475569" strokeDasharray="4 4" />
+                    <Line type="monotone" dataKey="cumIndex" name="תשואה מצטברת מדד %" stroke={BLUE} strokeWidth={2.5} dot={false} />
+                    <Line type="monotone" dataKey="cumFund" name="תשואה מצטברת קרן ×3 %" stroke={PURPLE} strokeWidth={2.5} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </>
+            )}
+            {activeChart === "perReturn" && (
+              <>
+                <p style={{ color: MUTED, fontSize: 13, textAlign: "center", margin: "0 0 12px 0" }}>תשואה בכל תקופה בנפרד</p>
+                <ResponsiveContainer width="100%" height={320}>
+                  <LineChart data={data.slice(1)}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={BORDER} />
+                    <XAxis dataKey="period" stroke="#475569" tick={{ fill: MUTED, fontSize: 12 }} />
+                    <YAxis stroke="#475569" tick={{ fill: MUTED, fontSize: 12 }} tickFormatter={v => `${v}%`} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend wrapperStyle={{ color: MUTED, fontSize: 13 }} />
+                    <ReferenceLine y={0} stroke="#475569" strokeDasharray="4 4" />
+                    <Line type="monotone" dataKey="indexReturn" name="תשואת מדד %" stroke={BLUE} strokeWidth={2} dot={{ r: 3, fill: BLUE }} />
+                    <Line type="monotone" dataKey="fundReturn" name="תשואת קרן ×3 %" stroke={PURPLE} strokeWidth={2} dot={{ r: 3, fill: PURPLE }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </>
+            )}
+          </div>
+
+          <div style={{ background: CARD, borderRadius: 12, border: `1px solid ${BORDER}`, overflow: "hidden", marginBottom: 16 }}>
+            <div style={{ padding: "12px 16px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ color: TEXT, fontWeight: 700, fontSize: 15 }}>טבלת נתונים</span>
+              <span style={{ color: MUTED, fontSize: 12 }}>כל יחידות הזמן</span>
+            </div>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, direction: "rtl" }}>
+                <thead>
+                  <tr style={{ background: "#111827" }}>
+                    <th style={{ padding: "11px 14px", borderBottom: `1px solid ${BORDER}`, color: MUTED, textAlign: "right", fontWeight: 600, whiteSpace: "nowrap" }}>יחידת זמן</th>
+                    <th style={{ padding: "11px 14px", borderBottom: `1px solid ${BORDER}`, color: BLUE, textAlign: "right", fontWeight: 700, whiteSpace: "nowrap" }}>מחיר המדד</th>
+                    <th style={{ padding: "11px 14px", borderBottom: `1px solid ${BORDER}`, color: BLUE, textAlign: "right", fontWeight: 700, whiteSpace: "nowrap" }}>תשואת המדד</th>
+                    <th style={{ padding: "11px 14px", borderBottom: `1px solid ${BORDER}`, color: PURPLE, textAlign: "right", fontWeight: 700, whiteSpace: "nowrap" }}>תשואת הקרן ×3</th>
+                    <th style={{ padding: "11px 14px", borderBottom: `1px solid ${BORDER}`, color: PURPLE, textAlign: "right", fontWeight: 700, whiteSpace: "nowrap" }}>מחיר הקרן</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.map((row, i) => (
+                    <tr key={i} style={{ background: i % 2 === 0 ? "#0f172a" : CARD, borderBottom: `1px solid #1e293b` }}>
+                      <td style={{ padding: "9px 14px", color: MUTED, textAlign: "right" }}>
+                        {i === 0 ? <span style={{ color: TEXT, fontWeight: 700 }}>התחלה</span> : row.period}
+                      </td>
+                      <td style={{ padding: "9px 14px", color: BLUE, fontWeight: 600, textAlign: "right" }}>{fmt(row.indexPrice)}</td>
+                      <td style={{ padding: "9px 14px", color: i === 0 ? MUTED : col(row.indexReturn), fontWeight: 600, textAlign: "right" }}>{i === 0 ? "—" : pct(row.indexReturn)}</td>
+                      <td style={{ padding: "9px 14px", color: i === 0 ? MUTED : col(row.fundReturn), fontWeight: 600, textAlign: "right" }}>{i === 0 ? "—" : pct(row.fundReturn)}</td>
+                      <td style={{ padding: "9px 14px", color: PURPLE, fontWeight: 600, textAlign: "right" }}>{fmt(row.fundPrice)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <p style={{ textAlign: "center", color: "#334155", fontSize: 12, marginTop: 24 }}>
+            * הדיאגרמה מיועדת להמחשה בלבד ואינה ייעוץ פיננסי
+          </p>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
