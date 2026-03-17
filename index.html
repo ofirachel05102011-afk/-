@@ -1,289 +1,280 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>המחשת קרן נאמנות ממונפת ×3</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.12.7/Recharts.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #0f172a; font-family: 'Segoe UI', Arial, sans-serif; }
-    input[type=range] { cursor: pointer; }
-    ::-webkit-scrollbar { height: 6px; width: 6px; }
-    ::-webkit-scrollbar-track { background: #1e293b; }
-    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0f172a;font-family:'Segoe UI',Arial,sans-serif;color:#e2e8f0;min-height:100vh;padding:24px 16px}
+    .wrap{max-width:900px;margin:0 auto}
+    h1{color:#60a5fa;font-size:24px;font-weight:800;text-align:center;margin-bottom:6px}
+    .sub{color:#94a3b8;text-align:center;font-size:14px;margin-bottom:24px}
+    .sub b.b{color:#60a5fa} .sub b.p{color:#c084fc}
+    .btn-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:18px}
+    .btn{padding:10px 20px;border-radius:8px;border:2px solid #334155;background:#1e293b;color:#94a3b8;cursor:pointer;font-size:14px;transition:all .15s;font-family:inherit}
+    .btn.active-bull{border-color:#4ade80;background:#4ade8018;color:#4ade80;font-weight:700}
+    .btn.active-bear{border-color:#f87171;background:#f8717118;color:#f87171;font-weight:700}
+    .btn.active-vol{border-color:#fbbf24;background:#fbbf2418;color:#fbbf24;font-weight:700}
+    .slider-row{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:14px 20px;margin-bottom:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+    .slider-row label{color:#94a3b8;font-size:14px;min-width:150px}
+    .slider-row input{flex:1;min-width:140px;accent-color:#60a5fa}
+    .pct-val{font-size:22px;font-weight:800;min-width:55px}
+    .badge{text-align:center;border-radius:8px;padding:9px 16px;margin-bottom:20px;font-size:14px}
+    .cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+    .card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:16px 18px}
+    .card .lbl{color:#94a3b8;font-size:12px;margin-bottom:4px}
+    .card .val{font-size:28px;font-weight:800}
+    .card .chg{font-size:15px;font-weight:600;margin-top:2px}
+    .card .start{color:#475569;font-size:12px;margin-top:2px}
+    .alert{border:1px solid #92400e;border-radius:12px;padding:14px 18px;margin-bottom:20px;background:#451a0322}
+    .alert h4{color:#fbbf24;font-size:15px;margin-bottom:8px}
+    .alert p{color:#fcd34d;font-size:13px;margin:4px 0}
+    .tab-row{display:flex;gap:6px}
+    .tab{padding:8px 16px;border-radius:8px 8px 0 0;border:1px solid #334155;background:#0f172a;color:#94a3b8;cursor:pointer;font-size:13px;font-family:inherit}
+    .tab.active{background:#1e293b;color:#e2e8f0;border-bottom:none}
+    .chart-box{background:#1e293b;border:1px solid #334155;border-radius:0 8px 8px 8px;padding:18px;margin-bottom:22px}
+    .chart-note{color:#94a3b8;font-size:13px;text-align:center;margin-bottom:10px}
+    .tbl-wrap{background:#1e293b;border:1px solid #334155;border-radius:12px;overflow:hidden;margin-bottom:16px}
+    .tbl-head{padding:11px 16px;border-bottom:1px solid #334155;display:flex;justify-content:space-between;align-items:center}
+    .tbl-head span{font-weight:700;font-size:15px}
+    .tbl-head small{color:#94a3b8;font-size:12px}
+    table{width:100%;border-collapse:collapse;font-size:13px;direction:rtl}
+    th{padding:10px 14px;border-bottom:1px solid #334155;text-align:right;font-weight:700;white-space:nowrap}
+    td{padding:8px 14px;text-align:right;font-weight:600}
+    tr:nth-child(odd) td{background:#0f172a}
+    tr:nth-child(even) td{background:#1e293b}
+    .footer{text-align:center;color:#334155;font-size:12px;margin-top:20px}
+    .pos{color:#4ade80} .neg{color:#f87171} .blue{color:#60a5fa} .purple{color:#c084fc} .muted{color:#94a3b8}
   </style>
 </head>
 <body>
-  <div id="root"></div>
+<div class="wrap">
+  <h1>המחשת קרן נאמנות ממונפת ×3</h1>
+  <p class="sub">מחיר התחלתי: מדד = <b class="b">100</b> &nbsp;|&nbsp; קרן = <b class="p">1,000</b></p>
 
-  <script type="text/babel">
-    const {
-      LineChart, Line, XAxis, YAxis, CartesianGrid,
-      Tooltip, Legend, ResponsiveContainer, ReferenceLine
-    } = Recharts;
-    const { useState, useMemo } = React;
+  <div class="btn-row">
+    <button class="btn active-bull" onclick="setScenario('bull')" id="btn-bull">📈 שוק עולה</button>
+    <button class="btn" onclick="setScenario('bear')" id="btn-bear">📉 שוק יורד</button>
+    <button class="btn" onclick="setScenario('volatile')" id="btn-vol">📊 שוק תנודתי</button>
+  </div>
 
-    const LEVERAGE = 3;
-    const INDEX_START = 100;
-    const FUND_START = 1000;
-    const PERIODS = 20;
+  <div class="slider-row">
+    <label>שינוי מדד בכל תקופה:</label>
+    <input type="range" min="1" max="15" value="5" id="pctSlider" oninput="onSlider(this.value)"/>
+    <span class="pct-val" id="pctDisplay" style="color:#4ade80">5%</span>
+    <span style="color:#94a3b8;font-size:13px">| קרן ×3: <b style="color:#c084fc" id="fundPctDisplay">15%</b></span>
+  </div>
 
-    function generateData(type, pct) {
-      const r = pct / 100;
-      let data = [];
-      let indexPrice = INDEX_START;
-      let fundPrice = FUND_START;
-      data.push({ period: 0, indexReturn: 0, fundReturn: 0, indexPrice: INDEX_START, fundPrice: FUND_START, cumIndex: 0, cumFund: 0 });
-      for (let i = 0; i < PERIODS; i++) {
-        const indexR = type === "bull" ? r : type === "bear" ? -r : (i % 2 === 0 ? r : -r);
-        const fundR = indexR * LEVERAGE;
-        indexPrice = indexPrice * (1 + indexR);
-        fundPrice = fundPrice * (1 + fundR);
-        data.push({
-          period: i + 1,
-          indexReturn: +(indexR * 100).toFixed(2),
-          fundReturn: +(fundR * 100).toFixed(2),
-          indexPrice: +indexPrice.toFixed(3),
-          fundPrice: +fundPrice.toFixed(3),
-          cumIndex: +(((indexPrice / INDEX_START) - 1) * 100).toFixed(2),
-          cumFund: +(((fundPrice / FUND_START) - 1) * 100).toFixed(2),
-        });
+  <div class="badge" id="badge"></div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="lbl">מחיר מדד סופי</div>
+      <div class="val blue" id="finalIndex">—</div>
+      <div class="chg" id="finalIndexChg">—</div>
+      <div class="start">התחלה: 100</div>
+    </div>
+    <div class="card">
+      <div class="lbl">מחיר קרן סופי ×3</div>
+      <div class="val purple" id="finalFund">—</div>
+      <div class="chg" id="finalFundChg">—</div>
+      <div class="start">התחלה: 1,000</div>
+    </div>
+  </div>
+
+  <div class="alert" id="alertBox" style="display:none">
+    <h4>⚠️ שחיקת תנודתיות (Volatility Decay / Beta Slippage)</h4>
+    <p id="alertLine1"></p>
+    <p id="alertLine2"></p>
+    <p id="alertLine3"></p>
+  </div>
+
+  <div class="tab-row">
+    <button class="tab active" onclick="setTab('price')" id="tab-price">מחירים</button>
+    <button class="tab" onclick="setTab('cum')" id="tab-cum">תשואה מצטברת %</button>
+    <button class="tab" onclick="setTab('per')" id="tab-per">תשואה בכל תקופה %</button>
+  </div>
+
+  <div class="chart-box">
+    <p class="chart-note" id="chartNote"></p>
+    <canvas id="mainChart" height="320"></canvas>
+  </div>
+
+  <div class="tbl-wrap">
+    <div class="tbl-head"><span>טבלת נתונים</span><small>כל יחידות הזמן</small></div>
+    <div style="overflow-x:auto">
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th class="muted">יחידת זמן</th>
+            <th class="blue">מחיר המדד</th>
+            <th class="blue">תשואת המדד</th>
+            <th class="purple">תשואת הקרן ×3</th>
+            <th class="purple">מחיר הקרן</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <p class="footer">* הדיאגרמה מיועדת להמחשה בלבד ואינה ייעוץ פיננסי</p>
+</div>
+
+<script>
+const LEVERAGE=3, INDEX_START=100, FUND_START=1000, PERIODS=20;
+let scenario='bull', pctVal=5, activeTab='price', chart=null;
+
+function generateData(type, pct){
+  const r=pct/100; let data=[];
+  let ip=INDEX_START, fp=FUND_START;
+  data.push({period:0,indexReturn:0,fundReturn:0,indexPrice:INDEX_START,fundPrice:FUND_START,cumIndex:0,cumFund:0});
+  for(let i=0;i<PERIODS;i++){
+    const ir=type==='bull'?r:type==='bear'?-r:(i%2===0?r:-r);
+    const fr=ir*LEVERAGE;
+    ip=ip*(1+ir); fp=fp*(1+fr);
+    data.push({
+      period:i+1,
+      indexReturn:+(ir*100).toFixed(2),
+      fundReturn:+(fr*100).toFixed(2),
+      indexPrice:+ip.toFixed(3),
+      fundPrice:+fp.toFixed(3),
+      cumIndex:+(((ip/INDEX_START)-1)*100).toFixed(2),
+      cumFund:+(((fp/FUND_START)-1)*100).toFixed(2),
+    });
+  }
+  return data;
+}
+
+function fmt(n){return parseFloat(n).toLocaleString('he-IL',{maximumFractionDigits:2})}
+function pct(n){return (n>=0?'+':'')+n+'%'}
+function colStr(n){return n>=0?'#4ade80':'#f87171'}
+
+function setScenario(s){
+  scenario=s;
+  ['bull','bear','vol'].forEach(k=>{
+    document.getElementById('btn-'+k).className='btn';
+  });
+  const map={bull:'active-bull',bear:'active-bear',volatile:'active-vol'};
+  document.getElementById('btn-'+(s==='volatile'?'vol':s)).className='btn '+map[s];
+  const sliderEl=document.getElementById('pctSlider');
+  sliderEl.style.accentColor=s==='bull'?'#4ade80':s==='bear'?'#f87171':'#fbbf24';
+  document.getElementById('pctDisplay').style.color=s==='bull'?'#4ade80':s==='bear'?'#f87171':'#fbbf24';
+  render();
+}
+
+function onSlider(v){
+  pctVal=+v;
+  document.getElementById('pctDisplay').textContent=v+'%';
+  document.getElementById('fundPctDisplay').textContent=(v*3)+'%';
+  render();
+}
+
+function setTab(t){
+  activeTab=t;
+  ['price','cum','per'].forEach(k=>{
+    document.getElementById('tab-'+k).className='tab'+(t===k?' active':'');
+  });
+  render();
+}
+
+function render(){
+  const data=generateData(scenario,pctVal);
+  const last=data[data.length-1];
+
+  // Badge
+  const descs={bull:`עלייה של ${pctVal}% בכל יחידת זמן`,bear:`ירידה של ${pctVal}% בכל יחידת זמן`,volatile:`סירוגין: +${pctVal}% ואז -${pctVal}% — המדד נשאר באותו מחיר, הקרן נשחקת`};
+  const cols={bull:'#4ade80',bear:'#f87171',volatile:'#fbbf24'};
+  const badge=document.getElementById('badge');
+  badge.textContent=descs[scenario];
+  badge.style.color=cols[scenario];
+  badge.style.background=cols[scenario]+'15';
+  badge.style.border='1px solid '+cols[scenario]+'44';
+
+  // Cards
+  document.getElementById('finalIndex').textContent=fmt(last.indexPrice);
+  document.getElementById('finalFund').textContent=fmt(last.fundPrice);
+  const ic=document.getElementById('finalIndexChg');
+  ic.textContent=pct(last.cumIndex); ic.className='chg '+(last.cumIndex>=0?'pos':'neg');
+  const fc=document.getElementById('finalFundChg');
+  fc.textContent=pct(last.cumFund); fc.className='chg '+(last.cumFund>=0?'pos':'neg');
+
+  // Alert
+  const alertBox=document.getElementById('alertBox');
+  if(scenario==='volatile'){
+    alertBox.style.display='block';
+    const si=+(((1+pctVal/100)*(1-pctVal/100)-1)*100).toFixed(4);
+    const sf=+(((1+(pctVal*3)/100)*(1-(pctVal*3)/100)-1)*100).toFixed(4);
+    const erosion=+(last.cumFund-last.cumIndex).toFixed(2);
+    document.getElementById('alertLine1').innerHTML=`מחזור אחד (+${pctVal}% ואז -${pctVal}%) על המדד: <strong style="color:${colStr(si)}">${pct(si)}</strong>`;
+    document.getElementById('alertLine2').innerHTML=`מחזור אחד (+${pctVal*3}% ואז -${pctVal*3}%) על הקרן: <strong style="color:${colStr(sf)}">${pct(sf)}</strong>`;
+    document.getElementById('alertLine3').innerHTML=`לאחר ${PERIODS} תקופות — מדד: <strong style="color:${colStr(last.cumIndex)}">${pct(last.cumIndex)}</strong> | קרן: <strong style="color:${colStr(last.cumFund)}">${pct(last.cumFund)}</strong> | שחיקה נוספת: <strong style="color:#f87171">${erosion}%</strong>`;
+  } else {
+    alertBox.style.display='none';
+  }
+
+  // Chart
+  const labels=data.map(d=>d.period===0?'התחלה':d.period);
+  const notes={price:'מחיר מדד (כחול) מול מחיר קרן ×3 (סגול)',cum:'תשואה מצטברת מנקודת הפתיחה',per:'תשואה בכל תקופה בנפרד'};
+  document.getElementById('chartNote').textContent=notes[activeTab];
+
+  let datasets=[];
+  if(activeTab==='price'){
+    datasets=[
+      {label:'מדד (מחיר)',data:data.map(d=>d.indexPrice),borderColor:'#60a5fa',backgroundColor:'transparent',borderWidth:2.5,pointRadius:0,tension:0.3},
+      {label:'קרן ×3 (מחיר)',data:data.map(d=>d.fundPrice),borderColor:'#c084fc',backgroundColor:'transparent',borderWidth:2.5,pointRadius:0,tension:0.3},
+    ];
+  } else if(activeTab==='cum'){
+    datasets=[
+      {label:'תשואה מצטברת מדד %',data:data.map(d=>d.cumIndex),borderColor:'#60a5fa',backgroundColor:'transparent',borderWidth:2.5,pointRadius:0,tension:0.3},
+      {label:'תשואה מצטברת קרן ×3 %',data:data.map(d=>d.cumFund),borderColor:'#c084fc',backgroundColor:'transparent',borderWidth:2.5,pointRadius:0,tension:0.3},
+    ];
+  } else {
+    const d2=data.slice(1);
+    datasets=[
+      {label:'תשואת מדד %',data:d2.map(d=>d.indexReturn),borderColor:'#60a5fa',backgroundColor:'transparent',borderWidth:2,pointRadius:3,tension:0.3},
+      {label:'תשואת קרן ×3 %',data:d2.map(d=>d.fundReturn),borderColor:'#c084fc',backgroundColor:'transparent',borderWidth:2,pointRadius:3,tension:0.3},
+    ];
+  }
+
+  const lbl=activeTab==='per'?data.slice(1).map(d=>d.period):labels;
+
+  if(chart){chart.destroy();}
+  const ctx=document.getElementById('mainChart').getContext('2d');
+  chart=new Chart(ctx,{
+    type:'line',
+    data:{labels:lbl,datasets},
+    options:{
+      responsive:true,
+      animation:{duration:300},
+      plugins:{
+        legend:{labels:{color:'#94a3b8',font:{size:13},rtl:true}},
+        tooltip:{rtl:true,bodyColor:'#e2e8f0',titleColor:'#60a5fa',backgroundColor:'#0d1526',borderColor:'#334155',borderWidth:1},
+      },
+      scales:{
+        x:{ticks:{color:'#64748b',font:{size:11}},grid:{color:'#334155'},title:{display:true,text:'יחידת זמן',color:'#64748b',font:{size:12}}},
+        y:{ticks:{color:'#64748b',font:{size:11},callback:(v)=>activeTab==='price'?fmt(v):v+'%'},grid:{color:'#334155'}},
       }
-      return data;
     }
+  });
 
-    const DARK = "#0f172a";
-    const CARD = "#1e293b";
-    const BORDER = "#334155";
-    const TEXT = "#e2e8f0";
-    const MUTED = "#94a3b8";
-    const BLUE = "#60a5fa";
-    const PURPLE = "#c084fc";
-    const GREEN = "#4ade80";
-    const RED = "#f87171";
-    const AMBER = "#fbbf24";
+  // Table
+  const tbody=document.getElementById('tableBody');
+  tbody.innerHTML='';
+  data.forEach((row,i)=>{
+    const tr=document.createElement('tr');
+    const periodCell=i===0?`<span style="color:#e2e8f0;font-weight:700">התחלה</span>`:`<span class="muted">${row.period}</span>`;
+    const idxRet=i===0?`<span class="muted">—</span>`:`<span class="${row.indexReturn>=0?'pos':'neg'}">${pct(row.indexReturn)}</span>`;
+    const funRet=i===0?`<span class="muted">—</span>`:`<span class="${row.fundReturn>=0?'pos':'neg'}">${pct(row.fundReturn)}</span>`;
+    tr.innerHTML=`<td>${periodCell}</td><td class="blue">${fmt(row.indexPrice)}</td><td>${idxRet}</td><td>${funRet}</td><td class="purple">${fmt(row.fundPrice)}</td>`;
+    tbody.appendChild(tr);
+  });
+}
 
-    const fmt = (n) => parseFloat(n).toLocaleString("he-IL", { maximumFractionDigits: 2 });
-    const pct = (n) => `${n >= 0 ? "+" : ""}${n}%`;
-    const col = (n) => n >= 0 ? GREEN : RED;
-
-    const CustomTooltip = ({ active, payload, label }) => {
-      if (!active || !payload?.length) return null;
-      return (
-        <div style={{ background: "#0d1526", border: `1px solid ${BORDER}`, borderRadius: 8, padding: "10px 14px", direction: "rtl", fontSize: 13 }}>
-          <p style={{ color: BLUE, fontWeight: "bold", marginBottom: 6 }}>יחידת זמן {label}</p>
-          {payload.map(p => (
-            <p key={p.dataKey} style={{ color: p.color, margin: "2px 0" }}>
-              {p.name}: <strong>{typeof p.value === "number" && p.name.includes("%") ? pct(p.value) : fmt(p.value)}</strong>
-            </p>
-          ))}
-        </div>
-      );
-    };
-
-    const scenarios = {
-      bull:     { label: "📈 שוק עולה",    color: GREEN,  desc: (p) => `עלייה של ${p}% בכל יחידת זמן` },
-      bear:     { label: "📉 שוק יורד",    color: RED,    desc: (p) => `ירידה של ${p}% בכל יחידת זמן` },
-      volatile: { label: "📊 שוק תנודתי", color: AMBER,  desc: (p) => `סירוגין: +${p}% ואז -${p}% — המדד מגיע בסוף לאותו מחיר, הקרן נשחקת` },
-    };
-
-    function App() {
-      const [scenario, setScenario] = useState("bull");
-      const [pctVal, setPctVal] = useState(5);
-      const [activeChart, setActiveChart] = useState("price");
-
-      const data = useMemo(() => generateData(scenario, pctVal), [scenario, pctVal]);
-      const last = data[data.length - 1];
-      const scen = scenarios[scenario];
-
-      const erosion = scenario === "volatile" ? +(last.cumFund - last.cumIndex).toFixed(2) : null;
-      const singleCycleIndex = +(((1 + pctVal/100) * (1 - pctVal/100) - 1) * 100).toFixed(4);
-      const singleCycleFund  = +(((1 + (pctVal*3)/100) * (1 - (pctVal*3)/100) - 1) * 100).toFixed(4);
-
-      return (
-        <div dir="rtl" style={{ fontFamily: "'Segoe UI', Arial, sans-serif", padding: "24px 16px", maxWidth: 900, margin: "0 auto", background: DARK, color: TEXT, minHeight: "100vh" }}>
-
-          <div style={{ textAlign: "center", marginBottom: 28 }}>
-            <h1 style={{ color: BLUE, fontSize: 26, fontWeight: 800, margin: 0 }}>המחשת קרן נאמנות ממונפת ×3</h1>
-            <p style={{ color: MUTED, marginTop: 6, fontSize: 14 }}>
-              מחיר התחלתי: מדד = <strong style={{ color: BLUE }}>100</strong> &nbsp;|&nbsp; קרן = <strong style={{ color: PURPLE }}>1,000</strong>
-            </p>
-          </div>
-
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center", marginBottom: 20 }}>
-            {Object.entries(scenarios).map(([key, s]) => (
-              <button key={key} onClick={() => setScenario(key)} style={{
-                padding: "10px 20px", borderRadius: 8,
-                border: `2px solid ${scenario === key ? s.color : BORDER}`,
-                background: scenario === key ? `${s.color}18` : CARD,
-                color: scenario === key ? s.color : MUTED,
-                cursor: "pointer", fontSize: 14,
-                fontWeight: scenario === key ? 700 : 400,
-                transition: "all 0.15s",
-              }}>
-                {s.label}
-              </button>
-            ))}
-          </div>
-
-          <div style={{ background: CARD, borderRadius: 10, padding: "14px 20px", marginBottom: 20, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-            <span style={{ color: MUTED, fontSize: 14, minWidth: 140 }}>שינוי מדד בכל תקופה:</span>
-            <input type="range" min={1} max={15} value={pctVal} onChange={e => setPctVal(+e.target.value)}
-              style={{ flex: 1, minWidth: 160, accentColor: scen.color }} />
-            <span style={{ color: scen.color, fontWeight: 700, fontSize: 20, minWidth: 60 }}>{pctVal}%</span>
-            <span style={{ color: MUTED, fontSize: 13 }}>| קרן ×3: <strong style={{ color: PURPLE }}>{pctVal * 3}%</strong></span>
-          </div>
-
-          <div style={{ textAlign: "center", background: `${scen.color}15`, border: `1px solid ${scen.color}44`, borderRadius: 8, padding: "10px 16px", marginBottom: 24, color: scen.color, fontSize: 14 }}>
-            {scen.desc(pctVal)}
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
-            {[
-              { label: "מחיר מדד סופי", value: fmt(last.indexPrice), change: last.cumIndex, color: BLUE, sub: "התחלה: 100" },
-              { label: "מחיר קרן סופי ×3", value: fmt(last.fundPrice), change: last.cumFund, color: PURPLE, sub: "התחלה: 1,000" },
-            ].map(c => (
-              <div key={c.label} style={{ background: CARD, borderRadius: 12, padding: "16px 20px", border: `1px solid ${BORDER}` }}>
-                <div style={{ color: MUTED, fontSize: 12, marginBottom: 4 }}>{c.label}</div>
-                <div style={{ color: c.color, fontSize: 30, fontWeight: 800 }}>{c.value}</div>
-                <div style={{ color: col(c.change), fontSize: 15, fontWeight: 600, marginTop: 2 }}>{pct(c.change)}</div>
-                <div style={{ color: "#475569", fontSize: 12, marginTop: 2 }}>{c.sub}</div>
-              </div>
-            ))}
-          </div>
-
-          {scenario === "volatile" && (
-            <div style={{ background: "#451a0322", border: `1px solid #92400e`, borderRadius: 12, padding: "14px 18px", marginBottom: 24 }}>
-              <p style={{ color: AMBER, fontWeight: 700, fontSize: 15, margin: "0 0 8px 0" }}>⚠️ שחיקת תנודתיות (Volatility Decay / Beta Slippage)</p>
-              <p style={{ color: "#fcd34d", fontSize: 13, margin: "4px 0" }}>
-                מחזור אחד (+{pctVal}% ואז -{pctVal}%) על המדד:{" "}
-                <strong style={{ color: singleCycleIndex < 0 ? RED : GREEN }}>{pct(singleCycleIndex)}</strong>
-              </p>
-              <p style={{ color: "#fcd34d", fontSize: 13, margin: "4px 0" }}>
-                מחזור אחד (+{pctVal*3}% ואז -{pctVal*3}%) על הקרן:{" "}
-                <strong style={{ color: singleCycleFund < 0 ? RED : GREEN }}>{pct(singleCycleFund)}</strong>
-              </p>
-              <p style={{ color: "#fcd34d", fontSize: 13, margin: "8px 0 0 0" }}>
-                לאחר {PERIODS} תקופות — המדד: <strong style={{ color: col(last.cumIndex) }}>{pct(last.cumIndex)}</strong>{" "}
-                | הקרן: <strong style={{ color: col(last.cumFund) }}>{pct(last.cumFund)}</strong>{" "}
-                | שחיקה נוספת: <strong style={{ color: RED }}>{erosion}%</strong>
-              </p>
-            </div>
-          )}
-
-          <div style={{ display: "flex", gap: 8, marginBottom: 0 }}>
-            {[["price", "מחירים"], ["cumReturn", "תשואה מצטברת %"], ["perReturn", "תשואה בכל תקופה %"]].map(([k, label]) => (
-              <button key={k} onClick={() => setActiveChart(k)} style={{
-                padding: "8px 16px", borderRadius: "8px 8px 0 0",
-                border: `1px solid ${BORDER}`, borderBottom: activeChart === k ? "none" : `1px solid ${BORDER}`,
-                background: activeChart === k ? CARD : DARK,
-                color: activeChart === k ? TEXT : MUTED,
-                cursor: "pointer", fontSize: 13,
-              }}>
-                {label}
-              </button>
-            ))}
-          </div>
-
-          <div style={{ background: CARD, borderRadius: "0 8px 8px 8px", padding: 20, marginBottom: 24, border: `1px solid ${BORDER}` }}>
-            {activeChart === "price" && (
-              <>
-                <p style={{ color: MUTED, fontSize: 13, textAlign: "center", margin: "0 0 12px 0" }}>מחיר מדד (כחול) מול מחיר קרן ×3 (סגול)</p>
-                <ResponsiveContainer width="100%" height={320}>
-                  <LineChart data={data}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={BORDER} />
-                    <XAxis dataKey="period" stroke="#475569" tick={{ fill: MUTED, fontSize: 12 }} />
-                    <YAxis stroke="#475569" tick={{ fill: MUTED, fontSize: 12 }} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend wrapperStyle={{ color: MUTED, fontSize: 13 }} />
-                    <ReferenceLine y={INDEX_START} stroke="#334155" strokeDasharray="4 4" />
-                    <Line type="monotone" dataKey="indexPrice" name="מדד (מחיר)" stroke={BLUE} strokeWidth={2.5} dot={false} />
-                    <Line type="monotone" dataKey="fundPrice" name="קרן ×3 (מחיר)" stroke={PURPLE} strokeWidth={2.5} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </>
-            )}
-            {activeChart === "cumReturn" && (
-              <>
-                <p style={{ color: MUTED, fontSize: 13, textAlign: "center", margin: "0 0 12px 0" }}>תשואה מצטברת מנקודת הפתיחה</p>
-                <ResponsiveContainer width="100%" height={320}>
-                  <LineChart data={data}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={BORDER} />
-                    <XAxis dataKey="period" stroke="#475569" tick={{ fill: MUTED, fontSize: 12 }} />
-                    <YAxis stroke="#475569" tick={{ fill: MUTED, fontSize: 12 }} tickFormatter={v => `${v}%`} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend wrapperStyle={{ color: MUTED, fontSize: 13 }} />
-                    <ReferenceLine y={0} stroke="#475569" strokeDasharray="4 4" />
-                    <Line type="monotone" dataKey="cumIndex" name="תשואה מצטברת מדד %" stroke={BLUE} strokeWidth={2.5} dot={false} />
-                    <Line type="monotone" dataKey="cumFund" name="תשואה מצטברת קרן ×3 %" stroke={PURPLE} strokeWidth={2.5} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </>
-            )}
-            {activeChart === "perReturn" && (
-              <>
-                <p style={{ color: MUTED, fontSize: 13, textAlign: "center", margin: "0 0 12px 0" }}>תשואה בכל תקופה בנפרד</p>
-                <ResponsiveContainer width="100%" height={320}>
-                  <LineChart data={data.slice(1)}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={BORDER} />
-                    <XAxis dataKey="period" stroke="#475569" tick={{ fill: MUTED, fontSize: 12 }} />
-                    <YAxis stroke="#475569" tick={{ fill: MUTED, fontSize: 12 }} tickFormatter={v => `${v}%`} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend wrapperStyle={{ color: MUTED, fontSize: 13 }} />
-                    <ReferenceLine y={0} stroke="#475569" strokeDasharray="4 4" />
-                    <Line type="monotone" dataKey="indexReturn" name="תשואת מדד %" stroke={BLUE} strokeWidth={2} dot={{ r: 3, fill: BLUE }} />
-                    <Line type="monotone" dataKey="fundReturn" name="תשואת קרן ×3 %" stroke={PURPLE} strokeWidth={2} dot={{ r: 3, fill: PURPLE }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </>
-            )}
-          </div>
-
-          <div style={{ background: CARD, borderRadius: 12, border: `1px solid ${BORDER}`, overflow: "hidden", marginBottom: 16 }}>
-            <div style={{ padding: "12px 16px", borderBottom: `1px solid ${BORDER}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ color: TEXT, fontWeight: 700, fontSize: 15 }}>טבלת נתונים</span>
-              <span style={{ color: MUTED, fontSize: 12 }}>כל יחידות הזמן</span>
-            </div>
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, direction: "rtl" }}>
-                <thead>
-                  <tr style={{ background: "#111827" }}>
-                    <th style={{ padding: "11px 14px", borderBottom: `1px solid ${BORDER}`, color: MUTED, textAlign: "right", fontWeight: 600, whiteSpace: "nowrap" }}>יחידת זמן</th>
-                    <th style={{ padding: "11px 14px", borderBottom: `1px solid ${BORDER}`, color: BLUE, textAlign: "right", fontWeight: 700, whiteSpace: "nowrap" }}>מחיר המדד</th>
-                    <th style={{ padding: "11px 14px", borderBottom: `1px solid ${BORDER}`, color: BLUE, textAlign: "right", fontWeight: 700, whiteSpace: "nowrap" }}>תשואת המדד</th>
-                    <th style={{ padding: "11px 14px", borderBottom: `1px solid ${BORDER}`, color: PURPLE, textAlign: "right", fontWeight: 700, whiteSpace: "nowrap" }}>תשואת הקרן ×3</th>
-                    <th style={{ padding: "11px 14px", borderBottom: `1px solid ${BORDER}`, color: PURPLE, textAlign: "right", fontWeight: 700, whiteSpace: "nowrap" }}>מחיר הקרן</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.map((row, i) => (
-                    <tr key={i} style={{ background: i % 2 === 0 ? "#0f172a" : CARD, borderBottom: `1px solid #1e293b` }}>
-                      <td style={{ padding: "9px 14px", color: MUTED, textAlign: "right" }}>
-                        {i === 0 ? <span style={{ color: TEXT, fontWeight: 700 }}>התחלה</span> : row.period}
-                      </td>
-                      <td style={{ padding: "9px 14px", color: BLUE, fontWeight: 600, textAlign: "right" }}>{fmt(row.indexPrice)}</td>
-                      <td style={{ padding: "9px 14px", color: i === 0 ? MUTED : col(row.indexReturn), fontWeight: 600, textAlign: "right" }}>{i === 0 ? "—" : pct(row.indexReturn)}</td>
-                      <td style={{ padding: "9px 14px", color: i === 0 ? MUTED : col(row.fundReturn), fontWeight: 600, textAlign: "right" }}>{i === 0 ? "—" : pct(row.fundReturn)}</td>
-                      <td style={{ padding: "9px 14px", color: PURPLE, fontWeight: 600, textAlign: "right" }}>{fmt(row.fundPrice)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <p style={{ textAlign: "center", color: "#334155", fontSize: 12, marginTop: 24 }}>
-            * הדיאגרמה מיועדת להמחשה בלבד ואינה ייעוץ פיננסי
-          </p>
-        </div>
-      );
-    }
-
-    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-  </script>
+// Init
+render();
+</script>
 </body>
 </html>
